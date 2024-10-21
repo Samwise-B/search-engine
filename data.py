@@ -1,4 +1,5 @@
 from datasets import load_dataset
+import collections
 import pandas as pd
 import random
 import pickle
@@ -24,6 +25,7 @@ num_of_rows = len(train_answers.index) - 1
 
 
 def clean_text(text):
+    print("cleaning text....")
     text = text.lower()
     text = text.replace('\n', ' ')
     text = text.replace('\r', ' ')
@@ -51,52 +53,64 @@ def clean_text(text):
 #     for word in words:
 #         word_to_int.get(word, counter)
 
-def get_lookup_table(words):
-    word_to_int = {}
-    word_counts = {}
-    count = 1
-    for word in words:
-        word_counts[word] = word_counts.get(word, 0) + 1
-        if not word_to_int.get(word):
-            word_to_int[word] = count
-            count += 1
-    return word_to_int, word_counts
+# def get_lookup_table(words):
+#     print("getting lookup table...")
+#     word_to_int = {}
+#     word_counts = {}
+#     count = 1
+#     for word in words:
+#         word_counts[word] = word_counts.get(word, 0) + 1
+#         if not word_to_int.get(word):
+#             word_to_int[word] = count
+#             count += 1
+#     return word_to_int, word_counts
+
+def get_lookup_table(words: list[str]) -> tuple[dict[str, int], dict[int, str]]:
+  word_counts = collections.Counter(words)
+  vocab = sorted(word_counts, key=lambda k: word_counts.get(k), reverse=True)
+  int_to_vocab = {ii+1: word for ii, word in enumerate(vocab)}
+  int_to_vocab[0] = '<PAD>'
+  vocab_to_int = {word: ii for ii, word in int_to_vocab.items()}
+  print(len(vocab_to_int))
+  return vocab_to_int, int_to_vocab
 
 
-def clean_data(df):
-    print("cleaning data ...")
+def data_to_text(df):
+    print("turning data to text ...")
     text_list = []
+    text = ''
     for index, row in df.iterrows():
-        if (index+1) % 1000 == 0:
-            print("row", index)
-        text_list = text_list + clean_text(row['query'])
+        if (index+1) % 10000 == 0:
+            print("row", index+1)
+        
+        text_list.append(row['query'])
+
         passages = row['passages']
-        text = ''
         for passage in passages['passage_text']:
             # text += passage.strip()
-            text_list = text_list + clean_text(passage)
+            text_list.append(passage)
             # print(clean_text(passage))
             # print(passage)
 
-    return text_list
-
+    return " ".join(text_list)
 
 # probably need to call this on other columns too
-text_words = clean_data(train_answers)
-word_to_int, word_counts = get_lookup_table(text_words)
-# save word_to_int and word_counts
-with open("dictionaries/bing_word_to_int.pkl") as file:
-    pickle.dump(word_to_int, file)
+text = data_to_text(train_answers)
 
-with open("dictionaries/bing_word_counts.pkl") as file:
-    pickle.dump(word_counts, file)
+print(text[:100])
+words = clean_text(text)
+word_to_int, word_counts = get_lookup_table(words)
 
-print(len(word_to_int))
+print("vocab size", len(word_to_int))
 sorted_word_counts = sorted(word_counts.items(), key=lambda item: item[1], reverse=True)
 print(sorted_word_counts[:10])
-# passages = train_answers['passages']
 
-# clean_text(passages[0]['passage_text'][0])
+# save word_to_int and word_counts
+with open("dictionaries/bing_word_to_int.pkl", "wb") as file:
+    pickle.dump(word_to_int, file)
+
+with open("./dictionaries/bing_word_counts.pkl", "wb") as file:
+    pickle.dump(word_counts, file)
 
 
 def get_random_text(index):
@@ -112,31 +126,32 @@ def get_random_text(index):
     random_passage = irrelevant_passages[random_passage_index]
     return random_passage
 
+# TO HANDLE
+def tuples_function():
+    list_of_tuples = []
 
-list_of_tuples = []
+    for index, row in train_answers.iterrows():
+        query = row['query']
+        passages = row['passages']
 
-for index, row in train_answers.iterrows():
-    query = row['query']
-    passages = row['passages']
+        is_selected = passages['is_selected']
+        passage_texts = passages['passage_text']
 
-    is_selected = passages['is_selected']
-    passage_texts = passages['passage_text']
+        irrelevant_passages = []
+        for i in range(10):
+            irrelevant_passages.append(get_random_text(index))
 
-    irrelevant_passages = []
-    for i in range(10):
-        irrelevant_passages.append(get_random_text(index))
+        # print(random_index)
+        # irrelevant_row = train_answers.iloc[random_index]
+        # irrelevant_passage = irrelevant_row['passages']
+        # irrelevant_passages = irrelevant_passage['passage_text']
+        print(len(irrelevant_passages))
+        list_of_tuples.append((query, passage_texts, irrelevant_passages))
 
-    # print(random_index)
-    # irrelevant_row = train_answers.iloc[random_index]
-    # irrelevant_passage = irrelevant_row['passages']
-    # irrelevant_passages = irrelevant_passage['passage_text']
-    print(len(irrelevant_passages))
-    list_of_tuples.append((query, passage_texts, irrelevant_passages))
-
-    # print(f"Row {index}:")
-    # for i, passage in enumerate(passage_texts):
-    #     #print(f"  Passage: {passage}, Selected: {is_selected[i]}")
-    #     list_of_tuples.append((query, passage))
+        # print(f"Row {index}:")
+        # for i, passage in enumerate(passage_texts):
+        #     #print(f"  Passage: {passage}, Selected: {is_selected[i]}")
+        #     list_of_tuples.append((query, passage))
 
 # print("number of tuples")
 # print(len(list_of_tuples))
