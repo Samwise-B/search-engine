@@ -19,6 +19,19 @@ num_of_rows = len(train_answers.index) - 1
 # for passage in train_answers['passages']['passage_text']:
 #     print(passage)
 
+def get_random_text(index):
+    random_index = random.randint(0, num_of_rows)
+    while (random_index == index):
+        random_index = random.randint(0, num_of_rows)
+
+    irrelevant_row = train_answers.iloc[random_index]
+    irrelevant_item = irrelevant_row['passages']
+    irrelevant_passages = irrelevant_item['passage_text']
+
+    random_passage_index = random.randint(0, len(irrelevant_passages)-1)
+    random_passage = irrelevant_passages[random_passage_index]
+    return random_passage
+    
 list_of_tuples = []
 
 for index, row in train_answers.iterrows():
@@ -28,14 +41,14 @@ for index, row in train_answers.iterrows():
     is_selected = passages['is_selected']
     passage_texts = passages['passage_text']
     
-    random_index = random.randint(0, num_of_rows)
-    while (random_index == index):
-        random_index = random.randint(0, num_of_rows)
+    irrelevant_passages = []
+    for i in range(10):
+        irrelevant_passages.append(get_random_text(index))
     
     #print(random_index)
-    irrelevant_row = train_answers.iloc[random_index]
-    irrelevant_passage = irrelevant_row['passages']
-    irrelevant_passages = irrelevant_passage['passage_text']
+    # irrelevant_row = train_answers.iloc[random_index]
+    # irrelevant_passage = irrelevant_row['passages']
+    # irrelevant_passages = irrelevant_passage['passage_text']
     print(len(irrelevant_passages))
     list_of_tuples.append((query, passage_texts, irrelevant_passages))
 
