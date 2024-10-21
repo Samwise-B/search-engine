@@ -1,6 +1,7 @@
 from datasets import load_dataset
 import pandas as pd
 import random
+import pickle
 
 ds = load_dataset("microsoft/ms_marco", "v1.1")
 # df = ds.to_pandas()
@@ -10,7 +11,7 @@ ds = load_dataset("microsoft/ms_marco", "v1.1")
 df_train = pd.DataFrame(ds['train'])
 # print(df_train[:11])
 
-train_answers = df_train[['query', 'passages']][:11]
+train_answers = df_train[['query', 'passages']]
 
 num_of_rows = len(train_answers.index) - 1
 # print(type(train_answers['passages']))
@@ -44,17 +45,30 @@ def clean_text(text):
     # text = ascii(text)
     words = text.split(" ")
 
-    return words
+    return list(filter(None, words))
 
 # def add_words_to_dict(words, word_to_int):
 #     for word in words:
 #         word_to_int.get(word, counter)
+
+def get_lookup_table(words):
+    word_to_int = {}
+    word_counts = {}
+    count = 1
+    for word in words:
+        word_counts[word] = word_counts.get(word, 0) + 1
+        if not word_to_int.get(word):
+            word_to_int[word] = count
+            count += 1
+    return word_to_int, word_counts
 
 
 def clean_data(df):
     print("cleaning data ...")
     text_list = []
     for index, row in df.iterrows():
+        if (index+1) % 1000 == 0:
+            print("row", index)
         text_list = text_list + clean_text(row['query'])
         passages = row['passages']
         text = ''
@@ -69,7 +83,17 @@ def clean_data(df):
 
 # probably need to call this on other columns too
 text_words = clean_data(train_answers)
-print(text_words)
+word_to_int, word_counts = get_lookup_table(text_words)
+# save word_to_int and word_counts
+with open("dictionaries/bing_word_to_int.pkl") as file:
+    pickle.dump(word_to_int, file)
+
+with open("dictionaries/bing_word_counts.pkl") as file:
+    pickle.dump(word_counts, file)
+
+print(len(word_to_int))
+sorted_word_counts = sorted(word_counts.items(), key=lambda item: item[1], reverse=True)
+print(sorted_word_counts[:10])
 # passages = train_answers['passages']
 
 # clean_text(passages[0]['passage_text'][0])
@@ -114,20 +138,12 @@ for index, row in train_answers.iterrows():
     #     #print(f"  Passage: {passage}, Selected: {is_selected[i]}")
     #     list_of_tuples.append((query, passage))
 
-print("number of tuples")
-print(len(list_of_tuples))
-print("query")
-print(list_of_tuples[0][0])
-print("relevant passages")
-print(len(list_of_tuples[0][1]))
-print("irrelevant passages")
-print(len(list_of_tuples[0][2]))
+# print("number of tuples")
+# print(len(list_of_tuples))
+# print("query")
+# print(list_of_tuples[0][0])
+# print("relevant passages")
+# print(len(list_of_tuples[0][1]))
+# print("irrelevant passages")
+# print(len(list_of_tuples[0][2]))
 
-
-# TODO Build a tokenizer
-
-def tokenizer():
-    # take in a dataframe
-    # go row by row
-    # text replace ?
-    print("todo")
