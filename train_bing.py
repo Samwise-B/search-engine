@@ -7,6 +7,7 @@ from torch.utils.data import Dataset
 import more_itertools
 import torch
 import wandb
+from data_preprocessing import preprocess_wiki, create_lookup_tables_wiki
 
 ds = load_dataset("microsoft/ms_marco", "v1.1")
 # df = ds.to_pandas()
@@ -67,11 +68,20 @@ def load_dataset(df, word_to_int):
 
     return training_data
 
+# load weights from smaller wiki model
+wiki_vocab = 63642
+wiki_args = (wiki_vocab, 64, 2)
+wiki_model = SkipGramModel.SkipGramFoo(*wiki_args)
+wiki_model.load_state_dict(torch.load("weights/wiki-weights.pt", weights_only=True))
+
 word_to_int = load_word_to_int()
 vocab_size = len(word_to_int) + 1
 
+# create larger model and use old weights
 args = (vocab_size, 64, 2)
 model = SkipGramModel.SkipGramFoo(*args)
+with torch.no_grad():
+    model.emb.weight[:wiki_vocab] = wiki_model.emb.weight.clone()
 print('model parameters: ', sum(p.numel() for p in model.parameters()))#
 
 optimizer = torch.optim.Adam(model.parameters(), lr=0.003)
@@ -84,7 +94,7 @@ EPOCH_NUM = 1
 
 model.to(device)
 print("training...")
-#wandb.init(project='skip-gram', name='mFoo')
+wandb.init(project='two-towers', name='bing-skip-gram')
 for i in range(EPOCH_NUM):
     print(f"Epoch: {i}")
     for j in range(0, len(training_data), BATCH_SIZE):
@@ -101,7 +111,22 @@ for i in range(EPOCH_NUM):
         optimizer.zero_grad()
         loss = model(inputs, targets, rand)
         print(f"loss: {loss.item()}")
+        wandb.log({"loss": loss.item()})
         loss.backward()
         optimizer.step()
+
+        if (j+1 % 25) == 0:
+            print("saving")
+            torch.save(model.state_dict(), f'./weights/bing_tuned_weights-{j}.pt')
+
+# save model
+print("saving")
+torch.save(model.state_dict(), './weights/fine_tuned_weights.pt')
+print('Uploading...')
+artifact = wandb.Artifact('model-weights', type='model')
+artifact.add_file('./weights/fine_tuned_weights.pt')
+wandb.log_artifact(artifact)
+print('Done!')
+wandb.finish()
 
 

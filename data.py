@@ -2,6 +2,7 @@ from datasets import load_dataset
 import pandas as pd
 import random
 import pickle
+from data_preprocessing import preprocess_wiki, create_lookup_tables_wiki
 
 ds = load_dataset("microsoft/ms_marco", "v1.1")
 # df = ds.to_pandas()
@@ -77,7 +78,7 @@ def clean_text(text):
 #     return word_to_int, word_counts
 
 
-def get_lookup_table(text_words):
+def get_lookup_table(text_words, word_to_int):
     word_counts = {}
 
     # Count the occurrences of each word
@@ -90,8 +91,15 @@ def get_lookup_table(text_words):
                             count in word_counts.items() if count > 5}
 
     # Create the lookup table (word to index)
-    word_to_int = {word: idx for idx,
+    #word_to_int = wiki_word_to_int
+    wiki_vocab_size = len(word_to_int)
+    # word_to_int = {word: idx + wiki_vocab_size for idx,
+    #                word in enumerate(filtered_word_counts.keys()) 
+    #                if word_to_int.get(word, "missing") == "missing"}
+    bing_word_to_int = {word: idx for idx,
                    word in enumerate(filtered_word_counts.keys())}
+    
+    word_to_int.update(bing_word_to_int)
 
     return word_to_int, filtered_word_counts
 
@@ -121,7 +129,13 @@ text_words = clean_data(train_answers)
 
 # print(type(text_words))
 
-word_to_int, word_counts = get_lookup_table(text_words)
+with open('data/text8') as f: text8: str = f.read()
+
+corpus: list[str] = preprocess_wiki(text8)
+wiki_lookup, ids_to_words = create_lookup_tables_wiki(corpus)
+print(len(wiki_lookup))
+
+word_to_int, word_counts = get_lookup_table(text_words, wiki_lookup)
 
 # print(word_to_int.sort())
 # print(word_counts.sort().head())
