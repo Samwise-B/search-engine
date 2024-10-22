@@ -36,6 +36,8 @@ def clean_text(text):
     text = text.replace('?', ' <QUESTION_MARK> ')
     text = text.replace('(', ' <LEFT_PAREN> ')
     text = text.replace(')', ' <RIGHT_PAREN> ')
+    text = text.replace('[', ' <LEFT_PAREN_SQUARE> ')
+    text = text.replace(']', ' <RIGHT_PAREN_SQUARE> ')
     text = text.replace('-', ' <HYPHEN> ')
     text = text.replace('–', ' <HYPHEN2> ')
     text = text.replace('--', ' <HYPHENS> ')
@@ -43,7 +45,14 @@ def clean_text(text):
     text = text.replace('"', ' <QUOTATION_MARK> ')
     text = text.replace("'", ' <SINGLE QUOTATION_MARK> ')
     text = text.replace("*", ' <ASTERISK> ')
-
+    text = text.replace("/", ' <FORWARD_SLASH> ')
+    text = text.replace("\\", ' <BACKWARD_SLASH> ')
+    text = text.replace("‘", ' <QUOTATION_TWO> ')
+    text = text.replace("“", ' <QUOTATION_THREE> ')
+    text = text.replace("”", ' <QUOTATION_FOUR> ')
+    text = text.replace("=", ' <EQUALS> ')
+    text = text.replace("$", ' <DOLLAR> ')
+    text = text.replace("£", ' <POUND> ')
     # text = ascii(text)
     words = text.split(" ")
 
@@ -70,12 +79,21 @@ def clean_text(text):
 
 def get_lookup_table(text_words):
     word_counts = {}
+
+    # Count the occurrences of each word
     for item in text_words[0]:
         for word in item:
             word_counts[word] = word_counts.get(word, 0) + 1
 
-    word_to_int = {word: idx for idx, word in enumerate(word_counts.keys())}
-    return word_to_int, word_counts
+    # Filter out words with a count less than 5
+    filtered_word_counts = {word: count for word,
+                            count in word_counts.items() if count > 5}
+
+    # Create the lookup table (word to index)
+    word_to_int = {word: idx for idx,
+                   word in enumerate(filtered_word_counts.keys())}
+
+    return word_to_int, filtered_word_counts
 
 
 def clean(rows):
