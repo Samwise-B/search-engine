@@ -2,8 +2,11 @@ from datasets import load_dataset
 import pickle
 import pandas as pd
 from data import clean_text
+from networks import SkipGramModel
 from torch.utils.data import Dataset
 import more_itertools
+import torch
+import wandb
 
 ds = load_dataset("microsoft/ms_marco", "v1.1")
 # df = ds.to_pandas()
@@ -49,29 +52,56 @@ def process_batch(row, word_to_int):
     query_tokens = tokenize(cleaned_query, word_to_int)
     passage_tokens = tokenize(cleaned_passages, word_to_int)
 
-    i_query, t_query = get_input_targets(query_tokens)
     i_passages, t_passages = get_input_targets(passage_tokens)
-    return i_query + i_passages, t_query + t_passages
 
-def loop_dataset(df):
-    word_to_int = load_word_to_int()
+    if len(query_tokens) < 3:
+        return pd.Series({"inputs": i_passages, "targets": t_passages})
+    else:
+        i_query, t_query = get_input_targets(query_tokens)
+        return pd.Series({"inputs":i_query + i_passages, "targets": t_query + t_passages})
+
+def load_dataset(df, word_to_int):
+    print("turning dataset into input, output pairs...")
     training_data = df.apply(lambda row: process_batch(row, word_to_int), axis=1)
-    print("input")
-    print(len(training_data[0][0]))
-    print("target")
-    print(len(training_data[0][1]))
     print("num rows:", len(training_data.index))
 
     return training_data
 
-training_data = loop_dataset(train_answers)
+word_to_int = load_word_to_int()
+vocab_size = len(word_to_int) + 1
+
+args = (vocab_size, 64, 2)
+model = SkipGramModel.SkipGramFoo(*args)
+print('model parameters: ', sum(p.numel() for p in model.parameters()))#
+
+optimizer = torch.optim.Adam(model.parameters(), lr=0.003)
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+training_data = load_dataset(train_answers, word_to_int)
 BATCH_SIZE = 256
 EPOCH_NUM = 1
 
-for i in range(EPOCH_NUM):
 
+model.to(device)
+print("training...")
+#wandb.init(project='skip-gram', name='mFoo')
+for i in range(EPOCH_NUM):
+    print(f"Epoch: {i}")
     for j in range(0, len(training_data), BATCH_SIZE):
         batch = training_data.iloc[j:j + BATCH_SIZE]
-        inputs = batch[0][:]
-        targets = batch[:][1].sum()
+        inputs = batch['inputs'].sum()
+        targets = batch['targets'].sum()
+        inputs = torch.LongTensor(inputs)
+        targets = torch.LongTensor(targets)
+
+        inputs = inputs.to(device)
+        targets = targets.to(device)
+
+        rand = torch.randint(0, len(word_to_int), (inputs.size(0), 2)).to(device)
+        optimizer.zero_grad()
+        loss = model(inputs, targets, rand)
+        print(f"loss: {loss.item()}")
+        loss.backward()
+        optimizer.step()
+
 
