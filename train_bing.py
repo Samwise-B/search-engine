@@ -7,7 +7,7 @@ from torch.utils.data import Dataset
 import more_itertools
 import torch
 import wandb
-from data_preprocessing import preprocess_wiki, create_lookup_tables_wiki
+from data_preprocessing import preprocess_wiki, create_lookup_tables_wiki, load_word_to_int, tokenize
 
 ds = load_dataset("microsoft/ms_marco", "v1.1")
 # df = ds.to_pandas()
@@ -22,17 +22,7 @@ train_answers = train_answers
 
 num_of_rows = len(train_answers.index) - 1
 
-def load_word_to_int():
-    with open("dictionaries/bing_word_to_int.pkl", "rb") as file:
-        word_to_int = pickle.load(file)
-    return word_to_int
 
-def tokenize(words, word_to_int):
-    tokens = []
-    for word in words:
-        tokens.append(word_to_int.get(word, len(word_to_int)))
-
-    return tokens
 
 def get_input_targets(tokens):
     inputs = []
@@ -45,6 +35,7 @@ def get_input_targets(tokens):
 def process_batch(row, word_to_int):
     query = row['query']
     passages = row['passages']['passage_text']
+    print(passages)
     passage_to_str = ' '.join(passages)
 
     cleaned_query = clean_text(query)

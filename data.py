@@ -2,7 +2,7 @@ from datasets import load_dataset
 import pandas as pd
 import random
 import pickle
-from data_preprocessing import preprocess_wiki, create_lookup_tables_wiki
+from data_preprocessing import preprocess_wiki, create_lookup_tables_wiki, clean_text
 
 ds = load_dataset("microsoft/ms_marco", "v1.1")
 # df = ds.to_pandas()
@@ -24,40 +24,7 @@ num_of_rows = len(train_answers.index) - 1
 # TODO Data cleaning
 
 
-def clean_text(text):
-    text = text.lower()
-    text = text.replace('\n', ' ')
-    text = text.replace('\r', ' ')
-    text = text.replace('\t', ' ')
-    text = text.replace('.', ' <PERIOD> ')
-    text = text.replace(',', ' <COMMA> ')
-    text = text.replace('"', ' <QUOTATION_MARK> ')
-    text = text.replace(';', ' <SEMICOLON> ')
-    text = text.replace('!', ' <EXCLAMATION_MARK> ')
-    text = text.replace('?', ' <QUESTION_MARK> ')
-    text = text.replace('(', ' <LEFT_PAREN> ')
-    text = text.replace(')', ' <RIGHT_PAREN> ')
-    text = text.replace('[', ' <LEFT_PAREN_SQUARE> ')
-    text = text.replace(']', ' <RIGHT_PAREN_SQUARE> ')
-    text = text.replace('-', ' <HYPHEN> ')
-    text = text.replace('–', ' <HYPHEN2> ')
-    text = text.replace('--', ' <HYPHENS> ')
-    text = text.replace(':', ' <COLON> ')
-    text = text.replace('"', ' <QUOTATION_MARK> ')
-    text = text.replace("'", ' <SINGLE QUOTATION_MARK> ')
-    text = text.replace("*", ' <ASTERISK> ')
-    text = text.replace("/", ' <FORWARD_SLASH> ')
-    text = text.replace("\\", ' <BACKWARD_SLASH> ')
-    text = text.replace("‘", ' <QUOTATION_TWO> ')
-    text = text.replace("“", ' <QUOTATION_THREE> ')
-    text = text.replace("”", ' <QUOTATION_FOUR> ')
-    text = text.replace("=", ' <EQUALS> ')
-    text = text.replace("$", ' <DOLLAR> ')
-    text = text.replace("£", ' <POUND> ')
-    # text = ascii(text)
-    words = text.split(" ")
 
-    return list(filter(None, words))
 
 # def add_words_to_dict(words, word_to_int):
 #     for word in words:
