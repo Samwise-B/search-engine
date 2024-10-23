@@ -12,7 +12,7 @@ class TowerQuery(torch.nn.Module):
     h0 = torch.zeros(1, self.hidden_size)
     emb = self.emb(query)
     _, enc = self.rnn(emb, h0)
-    print(enc.shape)
+    #print(enc.shape)
     return enc
   
 class TowerDocument(torch.nn.Module):
@@ -26,9 +26,9 @@ class TowerDocument(torch.nn.Module):
     h0 = torch.zeros(1, self.hidden_size)
     emb_rel = self.emb(relevant)
     _, enc_rel = self.rnn(emb_rel, h0)
-    print(enc_rel.shape)
+    #print(enc_rel.shape)
 
     emb_ir = self.emb(irrelevant)
     _, enc_ir = self.rnn(emb_ir, h0)
-    print(enc_ir.shape)
+    #print(enc_ir.shape)
     return enc_rel, enc_ir

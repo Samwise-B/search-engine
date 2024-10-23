@@ -31,7 +31,6 @@ def triplet_loss_function(encQ, encR, encIR, margin=1):
     ir_dis = distance_function(encQ, encIR)
     return max(0, rel_dis - ir_dis + margin)
 
-
 ds = load_dataset("microsoft/ms_marco", "v1.1")
 df_train = pd.DataFrame(ds['train'])
 df_train = df_train[['query', 'passages']]
@@ -50,7 +49,7 @@ modelSkip = SkipGramModel.SkipGramFoo(*skip_args)
 modelSkip.load_state_dict(torch.load("weights/fine_tuned_weights.pt", weights_only=True))
 
 # initialise two towers
-hidden_dim = 2 #vocab_dim // 4
+hidden_dim = embedding_dim * 2
 print("hidden dimensions:", hidden_dim)
 args = (vocab_dim, embedding_dim, hidden_dim)
 QModel = TwoTowers.TowerQuery(*args)
@@ -81,8 +80,6 @@ for i in range(1):
         loss.backward()
         optim_D.step()
         optim_Q.step()
-        break
-    break
     # get 1 query, relevant and irrelevant passage
     # tokenize query, passages
     # pass token to Qmodel
