@@ -4,12 +4,16 @@ from data_preprocessing import load_word_to_int, tokenize, clean_text
 import torch
 import pandas as pd
 
+
+torch.seed(42)
+
+
 def process_batch_tower(row, word_to_int):
     query = row['query']
     passage_col = row['passages']
     passages = passage_col['passage_text']
     relevant_doc = passages[passage_col['is_selected'].index(1)]
-    #print(passage_['is_selected'].index(0))
+    # print(passage_['is_selected'].index(0))
     irrelevant_doc = passages[passage_col['is_selected'].index(0)]
     # print(passage_col['is_selected'].index(1), passage_col['is_selected'].index(0))
 
@@ -23,18 +27,21 @@ def process_batch_tower(row, word_to_int):
 
     return query_tokens, rel_doc_tokens, ir_doc_tokens
 
+
 def distance_function(enc_one, enc_two):
     return 1 - torch.nn.functional.cosine_similarity(enc_one, enc_two)
+
 
 def triplet_loss_function(encQ, encR, encIR, margin=1):
     rel_dis = distance_function(encQ, encR)
     ir_dis = distance_function(encQ, encIR)
     return max(0, rel_dis - ir_dis + margin)
 
+
 ds = load_dataset("microsoft/ms_marco", "v1.1")
 df_train = pd.DataFrame(ds['train'])
 df_train = df_train[['query', 'passages']]
-#train_answers = train_answers
+# train_answers = train_answers
 num_of_rows = len(df_train.index) - 1
 
 # load word_to_int
@@ -46,7 +53,8 @@ print("vocab size:", vocab_dim)
 embedding_dim = 64
 skip_args = (vocab_dim, embedding_dim, 2)
 modelSkip = SkipGramModel.SkipGramFoo(*skip_args)
-modelSkip.load_state_dict(torch.load("weights/fine_tuned_weights.pt", weights_only=True))
+modelSkip.load_state_dict(torch.load(
+    "weights/fine_tuned_weights.pt", weights_only=True))
 
 # initialise two towers
 hidden_dim = embedding_dim * 2
@@ -61,12 +69,13 @@ with torch.no_grad():
     DModel.emb.weight.data.copy_(modelSkip.emb.weight.clone())
 
 print('Query Model parameters: ', sum(p.numel() for p in QModel.parameters()))
-print('Document Model parameters: ', sum(p.numel() for p in DModel.parameters()))
+print('Document Model parameters: ', sum(p.numel()
+      for p in DModel.parameters()))
 
 # define optimizers and device
 optim_Q = torch.optim.SGD(QModel.parameters(), lr=0.001)
 optim_D = torch.optim.SGD(DModel.parameters(), lr=0.001)
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cpu')
 
 QModel.to(device)
 DModel.to(device)
@@ -87,4 +96,3 @@ for i in range(1):
     # calculate loss
     # backprop
     # step optimizer
-
