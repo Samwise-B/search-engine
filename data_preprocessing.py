@@ -21,7 +21,7 @@ def clean_text(text):
     text = text.replace('--', ' <HYPHENS> ')
     text = text.replace(':', ' <COLON> ')
     text = text.replace('"', ' <QUOTATION_MARK> ')
-    text = text.replace("'", ' <SINGLE QUOTATION_MARK> ')
+    text = text.replace("'", ' <SINGLE_QUOTATION_MARK> ')
     text = text.replace("*", ' <ASTERISK> ')
     text = text.replace("/", ' <FORWARD_SLASH> ')
     text = text.replace("\\", ' <BACKWARD_SLASH> ')
@@ -39,7 +39,7 @@ def clean_text(text):
 def tokenize(words, word_to_int):
     tokens = []
     for word in words:
-        tokens.append(word_to_int.get(word, len(word_to_int)))
+        tokens.append(word_to_int.get(word, 0))
 
     return tokens
 

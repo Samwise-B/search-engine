@@ -8,7 +8,8 @@ class SkipGramFoo(torch.nn.Module):
     self.sig = torch.nn.Sigmoid()
 
   def forward(self, inpt, trgs, rand):
-    print(inpt.shape)
+    #print(inpt.shape)
+    #print(inpt)
     emb = self.emb(inpt)
     #print("emb", emb.shape)
     ctx = self.ffw.weight[trgs]

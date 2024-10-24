@@ -59,14 +59,27 @@ def get_lookup_table(text_words, word_to_int):
 
     # Create the lookup table (word to index)
     #word_to_int = wiki_word_to_int
+    print("wiki_lookup", list(word_to_int.items())[:100])
     wiki_vocab_size = len(word_to_int)
+    print(f"wiki size: {wiki_vocab_size}")
     # word_to_int = {word: idx + wiki_vocab_size for idx,
     #                word in enumerate(filtered_word_counts.keys()) 
     #                if word_to_int.get(word, "missing") == "missing"}
-    bing_word_to_int = {word: idx for idx,
-                   word in enumerate(filtered_word_counts.keys())}
+    # bing_word_to_int = {word: idx + wiki_vocab_size + 1 for idx,
+    #                word in enumerate(filtered_word_counts.keys()) if word_to_int.get(word) is None}
+    bing_word_to_int = {}
+    counter = wiki_vocab_size
+    for word in filtered_word_counts.keys():
+        if word_to_int.get(word) is None and bing_word_to_int.get(word) is None:
+            bing_word_to_int[word] = counter
+            counter += 1
+    
+
+    print("bing lookup", list(bing_word_to_int.items())[-100:])
+    print(f"bing vocab size: {len(bing_word_to_int)}")
     
     word_to_int.update(bing_word_to_int)
+    print(f"combined vocab size: {len(word_to_int)}")
 
     return word_to_int, filtered_word_counts
 
@@ -100,9 +113,11 @@ with open('data/text8') as f: text8: str = f.read()
 
 corpus: list[str] = preprocess_wiki(text8)
 wiki_lookup, ids_to_words = create_lookup_tables_wiki(corpus)
-print(len(wiki_lookup))
+# print(len(wiki_lookup))
 
 word_to_int, word_counts = get_lookup_table(text_words, wiki_lookup)
+# print(list(word_to_int.items())[:100])
+# print(list(word_to_int).items)
 
 # print(word_to_int.sort())
 # print(word_counts.sort().head())

@@ -1,13 +1,14 @@
 from datasets import load_dataset
 import pickle
 import pandas as pd
-from data import clean_text
 from networks import SkipGramModel
 from torch.utils.data import Dataset
 import more_itertools
 import torch
 import wandb
-from data_preprocessing import preprocess_wiki, create_lookup_tables_wiki, load_word_to_int, tokenize
+from data_preprocessing import preprocess_wiki, create_lookup_tables_wiki, load_word_to_int, tokenize, clean_text
+
+torch.set_printoptions(threshold=120_000)
 
 ds = load_dataset("microsoft/ms_marco", "v1.1")
 # df = ds.to_pandas()
@@ -35,7 +36,6 @@ def get_input_targets(tokens):
 def process_batch(row, word_to_int):
     query = row['query']
     passages = row['passages']['passage_text']
-    print(passages)
     passage_to_str = ' '.join(passages)
 
     cleaned_query = clean_text(query)
@@ -66,7 +66,7 @@ wiki_model = SkipGramModel.SkipGramFoo(*wiki_args)
 wiki_model.load_state_dict(torch.load("weights/wiki-weights.pt", weights_only=True))
 
 word_to_int = load_word_to_int()
-vocab_size = len(word_to_int) + 1
+vocab_size = len(word_to_int)
 
 # create larger model and use old weights
 args = (vocab_size, 64, 2)
@@ -89,8 +89,10 @@ wandb.init(project='two-towers', name='bing-skip-gram')
 for i in range(EPOCH_NUM):
     print(f"Epoch: {i}")
     for j in range(0, len(training_data), BATCH_SIZE):
+        #print(j)
         batch = training_data.iloc[j:j + BATCH_SIZE]
         inputs = batch['inputs'].sum()
+        #print(inputs)
         targets = batch['targets'].sum()
         inputs = torch.LongTensor(inputs)
         targets = torch.LongTensor(targets)

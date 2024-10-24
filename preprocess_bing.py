@@ -2,6 +2,7 @@ from datasets import load_dataset
 from data_preprocessing import load_word_to_int, clean_text, tokenize
 import pandas as pd
 import random
+import pickle
 # pd.set_option('display ')
 
 ds = load_dataset("microsoft/ms_marco", "v1.1")
@@ -15,7 +16,7 @@ num_of_rows = len(df_train.index) - 1
 word_to_int = load_word_to_int()
 print(list(word_to_int.items())[:10])
 print(dict(word_to_int.items())['rba'])
-vocab_dim = len(word_to_int) + 1
+vocab_dim = len(word_to_int)
 print("vocab size:", vocab_dim)
 
 # for index, row in df_train.iterrows():
@@ -71,11 +72,12 @@ for index, row in df_train.iterrows():
     irrelavant_list += ir
 output_dict = pd.DataFrame({
     'query': query_list,
-    'revalent': revalent_list,
-    'irrelavent': irrelavant_list
+    'relevant': revalent_list,
+    'irrelevant': irrelavant_list
 })
 
 print(output_dict.head(20))
-output_dict.to_csv('data/preprocess_bing.csv')
+output_dict.to_pickle("data/preprocess_bing.pkl")
+#output_dict.to_csv('data/preprocess_bing.csv')
 # create_frame = df_train.apply(lambda row: process_row(row), axis=1)
 # print(create_frame.head())
