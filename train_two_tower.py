@@ -64,7 +64,7 @@ def triplet_loss_function(encQ, encR, encIR, batch_size, margin=1):
 #df_train = pd.DataFrame(ds['train'])
 #df_train = df_train[['query', 'passages']]
 # train_answers = train_answers
-df_train = pd.read_pickle("data/preprocess_bing.pkl").iloc[:100]
+df_train = pd.read_pickle("data/preprocess_bing.pkl").iloc[:250000]
 num_of_rows = len(df_train.index) - 1
 
 # load word_to_int
@@ -87,6 +87,7 @@ args_d = (vocab_dim, embedding_dim, hidden_dim)
 QModel = TwoTowers.TowerQuery(*args_q)
 DModel = TwoTowers.TowerDocument(*args_d)
 
+
 # set new embedding layers to fine-tuned weights
 with torch.no_grad():
     QModel.emb.weight.data.copy_(modelSkip.emb.weight.clone())
@@ -99,14 +100,17 @@ print('Document Model parameters: ', sum(p.numel()
 # define optimizers and device
 optim_Q = torch.optim.Adam(QModel.parameters(), lr=0.001)
 optim_D = torch.optim.Adam(DModel.parameters(), lr=0.001)
+
+schedular_Q = torch.optim.lr_scheduler.LRScheduler(optim_Q, gamma=0.9)
+schedular_D = torch.optim.lr_scheduler.LRScheduler(optim_D, gamma=0.9)
 device = torch.device('cpu')
 
-BATCH_SIZE = 10
+BATCH_SIZE = 256
 
 QModel.to(device)
 DModel.to(device)
 print("training...")
-wandb.init(project='two-towers', name='two-tower-rnn-small')
+wandb.init(project='two-towers', name='two-tower-rnn-250-scheduler')
 for i in range(5):
     for j in range(0, len(df_train), BATCH_SIZE):
         #q, r, ir = process_batch_tower(row, word_to_int)
@@ -129,6 +133,8 @@ for i in range(5):
         loss.backward()
         optim_D.step()
         optim_Q.step()
+    schedular_D.step()
+    schedular_Q.step()
     # get 1 query, relevant and irrelevant passage
     # tokenize query, passages
     # pass token to Qmodel
