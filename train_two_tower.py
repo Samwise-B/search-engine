@@ -106,7 +106,7 @@ BATCH_SIZE = 256
 QModel.to(device)
 DModel.to(device)
 print("training...")
-wandb.init(project='two-towers', name='two-tower-rnn-multilayer')
+wandb.init(project='two-towers', name='two-tower-rnn-1layer')
 for i in range(5):
     for j in range(0, len(df_train), BATCH_SIZE):
         #q, r, ir = process_batch_tower(row, word_to_int)
@@ -115,6 +115,8 @@ for i in range(5):
         q, r, ir = pad_batch(batch)
         #print(q.shape)
 
+        optim_D.zero_grad()
+        optim_Q.zero_grad()
         q_emb = QModel(torch.LongTensor(q), len(batch.index))
         r_emb, ir_emb = DModel(torch.LongTensor(r), torch.LongTensor(ir), len(batch.index))
         q_emb = q_emb.squeeze()
