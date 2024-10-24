@@ -82,9 +82,10 @@ modelSkip.load_state_dict(torch.load(
 # initialise two towers
 hidden_dim = embedding_dim * 2
 print("hidden dimensions:", hidden_dim)
-args = (vocab_dim, embedding_dim, hidden_dim)
-QModel = TwoTowers.TowerQuery(*args)
-DModel = TwoTowers.TowerDocument(*args)
+args_q = (vocab_dim, embedding_dim, hidden_dim)
+args_d = (vocab_dim, embedding_dim, hidden_dim)
+QModel = TwoTowers.TowerQuery(*args_q)
+DModel = TwoTowers.TowerDocument(*args_d)
 
 # set new embedding layers to fine-tuned weights
 with torch.no_grad():
@@ -105,8 +106,8 @@ BATCH_SIZE = 256
 QModel.to(device)
 DModel.to(device)
 print("training...")
-wandb.init(project='two-towers', name='two-tower-rnn')
-for i in range(1):
+wandb.init(project='two-towers', name='two-tower-rnn-multilayer')
+for i in range(5):
     for j in range(0, len(df_train), BATCH_SIZE):
         #q, r, ir = process_batch_tower(row, word_to_int)
         batch = df_train.iloc[j:j + BATCH_SIZE]
