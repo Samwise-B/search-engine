@@ -57,7 +57,7 @@ def triplet_loss_function(encQ, encR, encIR, batch_size, margin=1):
     ir_dis = distance_function(encQ, encIR)
     #print(f"rel_dis: {rel_dis.shape}, ir_dis: {ir_dis.shape}")
     #return torch.max(torch.zeros(batch_size), rel_dis - ir_dis + margin).mean()
-    return torch.nn.functional.relu(rel_dis - ir_dis + margin)
+    return torch.nn.functional.relu(rel_dis - ir_dis + margin).mean()
 
 
 #ds = load_dataset("microsoft/ms_marco", "v1.1")
