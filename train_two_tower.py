@@ -101,8 +101,8 @@ print('Document Model parameters: ', sum(p.numel()
 optim_Q = torch.optim.Adam(QModel.parameters(), lr=0.001)
 optim_D = torch.optim.Adam(DModel.parameters(), lr=0.001)
 
-schedular_Q = torch.optim.lr_scheduler.LRScheduler(optim_Q, gamma=0.9)
-schedular_D = torch.optim.lr_scheduler.LRScheduler(optim_D, gamma=0.9)
+# schedular_Q = torch.optim.lr_scheduler.LRScheduler(optim_Q, gamma=0.9)
+# schedular_D = torch.optim.lr_scheduler.LRScheduler(optim_D, gamma=0.9)
 device = torch.device('cpu')
 
 BATCH_SIZE = 256
@@ -110,7 +110,7 @@ BATCH_SIZE = 256
 QModel.to(device)
 DModel.to(device)
 print("training...")
-wandb.init(project='two-towers', name='two-tower-rnn-250-scheduler')
+wandb.init(project='two-towers', name='two-tower-rnn-250k')
 for i in range(5):
     for j in range(0, len(df_train), BATCH_SIZE):
         #q, r, ir = process_batch_tower(row, word_to_int)
@@ -133,8 +133,8 @@ for i in range(5):
         loss.backward()
         optim_D.step()
         optim_Q.step()
-    schedular_D.step()
-    schedular_Q.step()
+    # schedular_D.step()
+    # schedular_Q.step()
     # get 1 query, relevant and irrelevant passage
     # tokenize query, passages
     # pass token to Qmodel
