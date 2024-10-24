@@ -103,7 +103,9 @@ optim_D = torch.optim.Adam(DModel.parameters(), lr=0.001)
 
 # schedular_Q = torch.optim.lr_scheduler.LRScheduler(optim_Q, gamma=0.9)
 # schedular_D = torch.optim.lr_scheduler.LRScheduler(optim_D, gamma=0.9)
-device = torch.device('cpu')
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+print("device:", 'cuda' if torch.cuda.is_available() else 'cpu')
 
 BATCH_SIZE = 256
 
@@ -117,7 +119,9 @@ for i in range(5):
         batch = df_train.iloc[j:j + BATCH_SIZE]
         #print(batch.shape)
         q, r, ir = pad_batch(batch)
-        #print(q.shape)
+        q = q.to(device)
+        r = r.to(device)
+        ir = ir.to(device)
 
         optim_D.zero_grad()
         optim_Q.zero_grad()
