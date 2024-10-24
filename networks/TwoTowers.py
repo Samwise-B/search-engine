@@ -1,6 +1,8 @@
 import torch
 import math
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 class TowerQuery(torch.nn.Module):
   def __init__(self, voc, emb, hddn, num_layers=1):
     super().__init__()
@@ -9,9 +11,9 @@ class TowerQuery(torch.nn.Module):
     self.hidden_size = hddn
     self.num_layers = num_layers
 
-  def forward(self, query, batch_size):
+  def forward(self, h0, query, batch_size):
     #print(query.shape)
-    h0 = torch.zeros(self.num_layers, batch_size, self.hidden_size)
+    h0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(device)
     #print("hidden", h0.shape)
     emb = self.emb(query)
     #emb = emb.unsqueeze(0)
@@ -28,8 +30,8 @@ class TowerDocument(torch.nn.Module):
     self.hidden_size = hddn
     self.num_layers = num_layers
 
-  def forward(self, relevant, irrelevant, batch_size):
-    h0 = torch.zeros(self.num_layers, batch_size, self.hidden_size)
+  def forward(self, h0, relevant, irrelevant, batch_size):
+    h0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(device)
     emb_rel = self.emb(relevant)
     _, enc_rel = self.rnn(emb_rel, h0)
     #print(enc_rel.shape)
