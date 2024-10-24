@@ -107,7 +107,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 print("device:", 'cuda' if torch.cuda.is_available() else 'cpu')
 
-BATCH_SIZE = 256
+BATCH_SIZE = 1000
 
 QModel.to(device)
 DModel.to(device)
