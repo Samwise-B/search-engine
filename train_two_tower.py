@@ -112,7 +112,8 @@ BATCH_SIZE = 1000
 QModel.to(device)
 DModel.to(device)
 print("training...")
-wandb.init(project='two-towers', name='two-tower-rnn-250k')
+name = "two-tower-rnn-250k"
+wandb.init(project='two-towers', name=name)
 for i in range(5):
     for j in range(0, len(df_train), BATCH_SIZE):
         #q, r, ir = process_batch_tower(row, word_to_int)
@@ -148,12 +149,12 @@ for i in range(5):
     # step optimizer
 # save model
 print("saving")
-torch.save(QModel.state_dict(), './weights/QModel_weights.pt')
-torch.save(DModel.state_dict(), './weights/DModel_weights.pt')
+torch.save(QModel.state_dict(), f'./weights/QModel_weights_{name}.pt')
+torch.save(DModel.state_dict(), f'./weights/DModel_weights_{name}.pt')
 print('Uploading...')
 artifact = wandb.Artifact('model-weights', type='model')
-artifact.add_file('./weights/QModel_weights.pt')
-artifact.add_file('./weights/DModel_weights.pt')
+artifact.add_file(f'./weights/QModel_weights_{name}.pt')
+artifact.add_file(f'./weights/DModel_weights_{name}.pt')
 wandb.log_artifact(artifact)
 print('Done!')
 wandb.finish()
