@@ -64,7 +64,7 @@ def triplet_loss_function(encQ, encR, encIR, batch_size, margin=1):
 #df_train = pd.DataFrame(ds['train'])
 #df_train = df_train[['query', 'passages']]
 # train_answers = train_answers
-df_train = pd.read_pickle("data/preprocess_bing.pkl")
+df_train = pd.read_pickle("data/preprocess_bing.pkl").iloc[:100]
 num_of_rows = len(df_train.index) - 1
 
 # load word_to_int
@@ -97,16 +97,16 @@ print('Document Model parameters: ', sum(p.numel()
       for p in DModel.parameters()))
 
 # define optimizers and device
-optim_Q = torch.optim.SGD(QModel.parameters(), lr=0.001)
-optim_D = torch.optim.SGD(DModel.parameters(), lr=0.001)
+optim_Q = torch.optim.Adam(QModel.parameters(), lr=0.001)
+optim_D = torch.optim.Adam(DModel.parameters(), lr=0.001)
 device = torch.device('cpu')
 
-BATCH_SIZE = 256
+BATCH_SIZE = 10
 
 QModel.to(device)
 DModel.to(device)
 print("training...")
-wandb.init(project='two-towers', name='two-tower-rnn-1layer')
+wandb.init(project='two-towers', name='two-tower-rnn-small')
 for i in range(5):
     for j in range(0, len(df_train), BATCH_SIZE):
         #q, r, ir = process_batch_tower(row, word_to_int)
