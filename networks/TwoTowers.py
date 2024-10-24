@@ -11,7 +11,7 @@ class TowerQuery(torch.nn.Module):
     self.hidden_size = hddn
     self.num_layers = num_layers
 
-  def forward(self, h0, query, batch_size):
+  def forward(self, query, batch_size):
     #print(query.shape)
     h0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(device)
     #print("hidden", h0.shape)
@@ -30,7 +30,7 @@ class TowerDocument(torch.nn.Module):
     self.hidden_size = hddn
     self.num_layers = num_layers
 
-  def forward(self, h0, relevant, irrelevant, batch_size):
+  def forward(self, relevant, irrelevant, batch_size):
     h0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(device)
     emb_rel = self.emb(relevant)
     _, enc_rel = self.rnn(emb_rel, h0)
