@@ -112,9 +112,10 @@ BATCH_SIZE = 1000
 QModel.to(device)
 DModel.to(device)
 print("training...")
-name = "two-tower-rnn-1000batch-lr-0.0001"
+name = "two-tower-rnn-20ep-1000batch-lr-0.0001"
 wandb.init(project='two-towers', name=name)
-for i in range(5):
+for i in range(20):
+    wandb.log({"epoch": i+1})
     for j in range(0, len(df_train), BATCH_SIZE):
         #q, r, ir = process_batch_tower(row, word_to_int)
         batch = df_train.iloc[j:j + BATCH_SIZE]
