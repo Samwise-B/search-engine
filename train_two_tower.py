@@ -64,7 +64,7 @@ def triplet_loss_function(encQ, encR, encIR, batch_size, margin=1):
 #df_train = pd.DataFrame(ds['train'])
 #df_train = df_train[['query', 'passages']]
 # train_answers = train_answers
-df_train = pd.read_pickle("data/preprocess_bing.pkl").iloc[:100000]
+df_train = pd.read_pickle("data/preprocess_bing.pkl")
 num_of_rows = len(df_train.index) - 1
 
 # load word_to_int
@@ -112,7 +112,7 @@ BATCH_SIZE = 1000
 QModel.to(device)
 DModel.to(device)
 print("training...")
-name = "two-tower-rnn-100k"
+name = "two-tower-rnn-margin-1-1000batch"
 wandb.init(project='two-towers', name=name)
 for i in range(5):
     for j in range(0, len(df_train), BATCH_SIZE):
