@@ -35,16 +35,22 @@ def process_row(row, word_to_int):
     relevant_list = []
     query_list = []
     irrelant_list = []
+    q_lengths = []
+    rel_lengths = []
+    ir_lengths = []
     for passage in passages['passage_text']:
         clean_passage = clean_text(passage)
         tokenpasage = tokenize(clean_passage, word_to_int)
+        rel_lengths.append(len(tokenpasage))
         relevant_list.append(tokenpasage)
         query_list.append(tokenquery)
+        q_lengths.append(len(tokenquery))
         irpassage = get_random_text(row_index)
         clean_ir_passage = clean_text(irpassage)
         token_irr_passage = tokenize(clean_ir_passage, word_to_int)
+        ir_lengths.append(len(token_irr_passage))
         irrelant_list.append(token_irr_passage)
-    return query_list, relevant_list, irrelant_list
+    return query_list, relevant_list, irrelant_list, q_lengths, rel_lengths, ir_lengths
 
 
 def get_random_text(index):
@@ -64,16 +70,25 @@ def get_random_text(index):
 query_list = []
 revalent_list = []
 irrelavant_list = []
+q_lens_list = []
+r_lens_list = []
+ir_lens_list = []
 for index, row in df_train.iterrows():
-    q, r, ir = process_row(row, word_to_int)
+    q, r, ir, q_lens, r_lens, ir_lens = process_row(row, word_to_int)
     # print(index)
     query_list += q
     revalent_list += r
     irrelavant_list += ir
+    q_lens_list += q_lens
+    r_lens_list += r_lens
+    ir_lens_list += ir_lens
 output_dict = pd.DataFrame({
     'query': query_list,
     'relevant': revalent_list,
-    'irrelevant': irrelavant_list
+    'irrelevant': irrelavant_list,
+    'query_length': q_lens_list,
+    'r_lens_list': r_lens_list,
+    "ir_lens_list": ir_lens_list
 })
 
 print(output_dict.head(20))

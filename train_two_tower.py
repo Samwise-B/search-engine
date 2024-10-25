@@ -113,13 +113,16 @@ BATCH_SIZE = 1000
 QModel.to(device)
 DModel.to(device)
 print("training...")
-name = "two-tower-rnn-20ep-1000batch-lr-0.0001-randomshuffle"
+name = "two-tower-rnn-20ep-1000batch-lr-0.0001-randomshuffle-packed"
 wandb.init(project='two-towers', name=name)
 for i in range(20):
     wandb.log({"epoch": i+1})
     for j in range(0, len(df_train), BATCH_SIZE):
         #q, r, ir = process_batch_tower(row, word_to_int)
         batch = df_train.iloc[j:j + BATCH_SIZE]
+        q_lens = batch['query_length'].tolist()
+        r_lens = batch['r_lens_list'].tolist()
+        ir_lens = batch['ir_lens_list'].tolist()
         #print(batch.shape)
         q, r, ir = pad_batch(batch)
         q = torch.LongTensor(q).to(device)
@@ -128,8 +131,8 @@ for i in range(20):
 
         optim_D.zero_grad()
         optim_Q.zero_grad()
-        q_emb = QModel(q, len(batch.index))
-        r_emb, ir_emb = DModel(r, ir, len(batch.index))
+        q_emb = QModel(q, q_lens, len(batch.index))
+        r_emb, ir_emb = DModel(r, ir, r_lens, ir_lens, len(batch.index))
         q_emb = q_emb.squeeze()
         r_emb = r_emb.squeeze()
         ir_emb = ir_emb.squeeze()
