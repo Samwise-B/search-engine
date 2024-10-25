@@ -113,7 +113,7 @@ BATCH_SIZE = 1000
 QModel.to(device)
 DModel.to(device)
 print("training...")
-name = "two-tower-rnn-20ep-1000batch-lr-0.0001"
+name = "two-tower-rnn-20ep-1000batch-lr-0.0001-randomshuffle"
 wandb.init(project='two-towers', name=name)
 for i in range(20):
     wandb.log({"epoch": i+1})
