@@ -98,8 +98,8 @@ print('Document Model parameters: ', sum(p.numel()
       for p in DModel.parameters()))
 
 # define optimizers and device
-optim_Q = torch.optim.Adam(QModel.parameters(), lr=0.001)
-optim_D = torch.optim.Adam(DModel.parameters(), lr=0.001)
+optim_Q = torch.optim.Adam(QModel.parameters(), lr=0.0001)
+optim_D = torch.optim.Adam(DModel.parameters(), lr=0.0001)
 
 # schedular_Q = torch.optim.lr_scheduler.LRScheduler(optim_Q, gamma=0.9)
 # schedular_D = torch.optim.lr_scheduler.LRScheduler(optim_D, gamma=0.9)
@@ -112,7 +112,7 @@ BATCH_SIZE = 1000
 QModel.to(device)
 DModel.to(device)
 print("training...")
-name = "two-tower-rnn-margin-1-1000batch"
+name = "two-tower-rnn-1000batch-lr-0.0001"
 wandb.init(project='two-towers', name=name)
 for i in range(5):
     for j in range(0, len(df_train), BATCH_SIZE):
