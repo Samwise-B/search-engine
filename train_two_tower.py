@@ -65,6 +65,7 @@ def triplet_loss_function(encQ, encR, encIR, batch_size, margin=1):
 #df_train = df_train[['query', 'passages']]
 # train_answers = train_answers
 df_train = pd.read_pickle("data/preprocess_bing.pkl")
+df_train = df_train.sample(frac=1, random_state=42).reset_index(drop=True)
 num_of_rows = len(df_train.index) - 1
 
 # load word_to_int
