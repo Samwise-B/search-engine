@@ -6,24 +6,25 @@ from torch.utils.data import Dataset
 import more_itertools
 import torch
 import wandb
-from data_preprocessing import preprocess_wiki, create_lookup_tables_wiki, load_word_to_int, tokenize, clean_text
+from pathlib import Path
+import sys
+
+repo_root = Path(__file__).parent
+sys.path.append(str(repo_root))
+from utils.data_preprocessing import preprocess_wiki, create_lookup_tables_wiki, load_word_to_int, tokenize, clean_text
+
+root_dir = Path(__file__).parent
+weights_dir = Path(root_dir / "weights")
+wiki_weights_path = Path(weights_dir / "wiki-weights.pt")
+fine_tuned_weights_path = Path(weights_dir / "fine_tuned_weights.pt")
 
 torch.set_printoptions(threshold=120_000)
 
 ds = load_dataset("microsoft/ms_marco", "v1.1")
-# df = ds.to_pandas()
-# print(df)
-# print(ds['train'].column_names)
-
 df_train = pd.DataFrame(ds['train'])
-# print(df_train[:11])
-
 train_answers = df_train[['query', 'passages']]
 train_answers = train_answers
-
 num_of_rows = len(train_answers.index) - 1
-
-
 
 def get_input_targets(tokens):
     inputs = []
@@ -62,15 +63,15 @@ def load_dataset(df, word_to_int):
 # load weights from smaller wiki model
 wiki_vocab = 63642
 wiki_args = (wiki_vocab, 64, 2)
-wiki_model = SkipGramModel.SkipGramFoo(*wiki_args)
-wiki_model.load_state_dict(torch.load("weights/wiki-weights.pt", weights_only=True))
+wiki_model = SkipGramModel.SkipGram(*wiki_args)
+wiki_model.load_state_dict(torch.load(wiki_weights_path, weights_only=True))
 
 word_to_int = load_word_to_int()
 vocab_size = len(word_to_int)
 
 # create larger model and use old weights
 args = (vocab_size, 64, 2)
-model = SkipGramModel.SkipGramFoo(*args)
+model = SkipGramModel.SkipGram(*args)
 with torch.no_grad():
     model.emb.weight[:wiki_vocab] = wiki_model.emb.weight.clone()
 print('model parameters: ', sum(p.numel() for p in model.parameters()))#
@@ -110,14 +111,14 @@ for i in range(EPOCH_NUM):
 
         if (j+1 % 25) == 0:
             print("saving")
-            torch.save(model.state_dict(), f'./weights/bing_tuned_weights-{j}.pt')
+            torch.save(model.state_dict(), f'../weights/bing_tuned_weights-{j}.pt')
 
 # save model
 print("saving")
-torch.save(model.state_dict(), './weights/fine_tuned_weights.pt')
+torch.save(model.state_dict(), '../weights/fine_tuned_weights.pt')
 print('Uploading...')
 artifact = wandb.Artifact('model-weights', type='model')
-artifact.add_file('./weights/fine_tuned_weights.pt')
+artifact.add_file('../weights/fine_tuned_weights.pt')
 wandb.log_artifact(artifact)
 print('Done!')
 wandb.finish()

@@ -1,32 +1,18 @@
 from datasets import load_dataset
-from networks import TwoTowers, SkipGramModel
-from data_preprocessing import load_word_to_int, tokenize, clean_text
 import torch
 import pandas as pd
 import wandb
+from pathlib import Path
+import sys
+
+repo_root = Path(__file__).parent
+sys.path.append(str(repo_root))
+from networks import TwoTowers, SkipGramModel
+from utils.data_preprocessing import load_word_to_int, tokenize, clean_text
+
 
 
 torch.manual_seed(42)
-
-
-def process_batch_tower(row, word_to_int):
-    query = row['query']
-    passage_col = row['passages']
-    passages = passage_col['passage_text']
-    relevant_doc = passages[passage_col['is_selected'].index(1)]
-    # print(passage_['is_selected'].index(0))
-    irrelevant_doc = passages[passage_col['is_selected'].index(0)]
-    # print(passage_col['is_selected'].index(1), passage_col['is_selected'].index(0))
-
-    cleaned_query = clean_text(query)
-    cleaned_docR = clean_text(relevant_doc)
-    cleaned_dorIr = clean_text(irrelevant_doc)
-
-    query_tokens = tokenize(cleaned_query, word_to_int)
-    rel_doc_tokens = tokenize(relevant_doc, word_to_int)
-    ir_doc_tokens = tokenize(irrelevant_doc, word_to_int)
-
-    return query_tokens, rel_doc_tokens, ir_doc_tokens
 
 def pad_batch(batch):
     max_lengths = batch.apply(lambda row: max(len(row['query']), len(row['relevant']), len(row['irrelevant'])), axis=1)
@@ -35,10 +21,6 @@ def pad_batch(batch):
     padded_batch = batch.apply(lambda row: pad_row_right(row, batch_max_length), axis=1)
     #print(padded_batch.head())
     return padded_batch['query'].tolist(), padded_batch['relevant'].tolist(), padded_batch['irrelevant'].tolist()
-
-# def pad_list(lst, max_length, pad_value=None):
-#     """Pads a list with `pad_value` until it reaches `max_length`."""
-#     return lst + [pad_value] * (max_length - len(lst))
 
 def pad_row_left(row, max_length, pad_value=0):
     query = ([pad_value] * (max_length - len(row['query']))) + row['query']
@@ -59,11 +41,9 @@ def distance_function(enc_one, enc_two):
     return 1 - torch.nn.functional.cosine_similarity(enc_one, enc_two)
 
 
-def triplet_loss_function(encQ, encR, encIR, batch_size, margin=1):
+def triplet_loss_function(encQ, encR, encIR, margin=1):
     rel_dis = distance_function(encQ, encR)
     ir_dis = distance_function(encQ, encIR)
-    #print(f"rel_dis: {rel_dis.shape}, ir_dis: {ir_dis.shape}")
-    #return torch.max(torch.zeros(batch_size), rel_dis - ir_dis + margin).mean()
     return torch.nn.functional.relu(rel_dis - ir_dis + margin).mean()
 
 
@@ -71,7 +51,7 @@ def triplet_loss_function(encQ, encR, encIR, batch_size, margin=1):
 #df_train = pd.DataFrame(ds['train'])
 #df_train = df_train[['query', 'passages']]
 # train_answers = train_answers
-df_train = pd.read_pickle("data/preprocess_bing.pkl")
+df_train = pd.read_pickle("../data/preprocess_bing.pkl")
 df_train = df_train.sample(frac=1, random_state=42).reset_index(drop=True)
 num_of_rows = len(df_train.index) - 1
 
@@ -83,9 +63,9 @@ print("vocab size:", vocab_dim)
 # load embeddings
 embedding_dim = 64
 skip_args = (vocab_dim, embedding_dim, 2)
-modelSkip = SkipGramModel.SkipGramFoo(*skip_args)
+modelSkip = SkipGramModel.SkipGram(*skip_args)
 modelSkip.load_state_dict(torch.load(
-    "weights/fine_tuned_weights.pt", weights_only=True))
+    "../weights/fine_tuned_weights.pt", weights_only=True))
 
 # initialise two towers
 hidden_dim = embedding_dim * 2
@@ -125,7 +105,6 @@ wandb.init(project='two-towers', name=name)
 for i in range(20):
     wandb.log({"epoch": i+1})
     for j in range(0, len(df_train), BATCH_SIZE):
-        #q, r, ir = process_batch_tower(row, word_to_int)
         batch = df_train.iloc[j:j + BATCH_SIZE]
         q_lens = batch['query_length'].tolist()
         r_lens = batch['r_lens_list'].tolist()
@@ -161,12 +140,12 @@ for i in range(20):
     # step optimizer
 # save model
 print("saving")
-torch.save(QModel.state_dict(), f'./weights/QModel_weights_{name}.pt')
-torch.save(DModel.state_dict(), f'./weights/DModel_weights_{name}.pt')
+torch.save(QModel.state_dict(), f'../weights/QModel_weights_{name}.pt')
+torch.save(DModel.state_dict(), f'../weights/DModel_weights_{name}.pt')
 print('Uploading...')
 artifact = wandb.Artifact('model-weights', type='model')
-artifact.add_file(f'./weights/QModel_weights_{name}.pt')
-artifact.add_file(f'./weights/DModel_weights_{name}.pt')
+artifact.add_file(f'../weights/QModel_weights_{name}.pt')
+artifact.add_file(f'../weights/DModel_weights_{name}.pt')
 wandb.log_artifact(artifact)
 print('Done!')
 wandb.finish()
