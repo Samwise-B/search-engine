@@ -5,7 +5,7 @@ import wandb
 from pathlib import Path
 import sys
 
-repo_root = Path(__file__).parent
+repo_root = Path(__file__).parent.parent
 sys.path.append(str(repo_root))
 from networks import TwoTowers, SkipGramModel
 from utils.data_preprocessing import load_word_to_int, tokenize, clean_text
@@ -38,7 +38,7 @@ def pad_row_right(row, max_length, pad_value=0):
 
 
 def distance_function(enc_one, enc_two):
-    return 1 - torch.nn.functional.cosine_similarity(enc_one, enc_two)
+    return 1 - torch.nn.functional.cosine_similarity(enc_one, enc_two, dim=1)
 
 
 def triplet_loss_function(encQ, encR, encIR, margin=1):

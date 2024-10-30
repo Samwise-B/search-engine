@@ -1,0 +1,28 @@
+services:
+  front:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: frontend-service
+    ports:
+      - "8501:8501"
+    networks:
+      - app-network
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: api-service
+    volumes:
+      - ./weights:/workspace/weights
+      - ./data:/workspace/data
+    ports:
+      - "80:80"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+

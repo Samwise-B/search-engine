@@ -43,6 +43,12 @@ def tokenize(words, word_to_int):
 
     return tokens
 
+def tokenize_string(text, word_to_int):
+   words = clean_text(text)
+   tokens = tokenize(words, word_to_int)
+   return tokens
+
+
 def preprocess_wiki(text: str) -> list[str]:
   text = text.lower()
   text = text.replace('.',  ' <PERIOD> ')

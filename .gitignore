@@ -1,5 +1,5 @@
 tower/
 __pycache__/
 wandb/
-data/preprocess_bing.pkl
+data/*
 key
