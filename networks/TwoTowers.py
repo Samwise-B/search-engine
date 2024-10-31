@@ -12,16 +12,15 @@ class TowerQuery(torch.nn.Module):
     self.hidden_size = hddn
     self.num_layers = num_layers
 
-  def forward(self, query, q_lens, batch_size):
-    #print(query.shape)
-    h0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(device)
-    #print("hidden", h0.shape)
-    emb = self.emb(query)
-    #emb = emb.unsqueeze(0)
-    #print("emb",emb.shape)
-    packed_enc = pack_padded_sequence(emb, q_lens, batch_first=True, enforce_sorted=False)
-    _, enc = self.rnn(packed_enc, h0)
-    #print(enc.shape)
+  def forward(self, query, batch_size):
+    query = [torch.tensor(q, dtype=torch.long, device=device) for q in query]
+    padded_queries = pad_sequence(query, batch_first=True)
+    padded_emb = self.emb(padded_queries)
+
+    q_lens = [len(q) for q in query]
+    packed_enc = pack_padded_sequence(padded_emb, q_lens, batch_first=True, enforce_sorted=False)
+
+    _, enc = self.rnn(packed_enc)
     return enc
   
   def encode_query_single(self, query):
@@ -38,24 +37,30 @@ class TowerDocument(torch.nn.Module):
     self.num_layers = num_layers
 
   def forward(self, relevant, irrelevant, batch_size):
-    h0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(device)
-    emb_rel = self.emb(relevant)
-    r_lens = [len(doc) for doc in relevant]
-    packed_enc_rel = pack_padded_sequence(emb_rel, r_lens, batch_first=True, enforce_sorted=False)
-    _, enc_rel = self.rnn(packed_enc_rel, h0)
-    #print(enc_rel.shape)
+    positives = [torch.tensor(d) for d in relevant]
+    pad_rel = pad_sequence(positives, batch_first=True)
 
-    emb_ir = self.emb(irrelevant)
+    emb_rel = self.emb(pad_rel)
+    r_lens = [len(doc) for doc in positives]
+    packed_enc_rel = pack_padded_sequence(emb_rel, r_lens, batch_first=True, enforce_sorted=False)
+
+    _, enc_rel = self.rnn(packed_enc_rel)
+
+
+    negatives = [torch.tensor(d) for d in irrelevant]
+    padded_negs = pad_sequence(negatives, batch_first=True)
+    emb_ir = self.emb(padded_negs)
+
     ir_lens = [len(doc) for doc in irrelevant]
-    packed_enc_rel = pack_padded_sequence(emb_ir, ir_lens, batch_first=True, enforce_sorted=False)
-    _, enc_ir = self.rnn(packed_enc_rel, h0)
-    #print(enc_ir.shape)
+    
+    packed_enc_ir = pack_padded_sequence(emb_ir, ir_lens, batch_first=True, enforce_sorted=False)
+
+    _, enc_ir = self.rnn(packed_enc_ir)
     return enc_rel, enc_ir
   
   def encode_doc_single(self, doc):
-    h0 = torch.zeros(self.num_layers, self.hidden_size).to(device)
     emb = self.emb(doc)
-    _, enc = self.rnn(emb, h0)
+    _, enc = self.rnn(emb)
 
     return enc
   

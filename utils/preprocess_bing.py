@@ -6,10 +6,10 @@ from pathlib import Path
 from tqdm import tqdm
 
 ds = load_dataset("microsoft/ms_marco", "v1.1")
-df_train = pd.DataFrame(ds['train'])
-df_train = df_train[['query', 'passages']]
+df = pd.DataFrame(ds['test'])
+df = df[['query', 'passages']]
 # train_answers = train_answers
-num_of_rows = len(df_train.index) - 1
+num_of_rows = len(df.index) - 1
 
 
 # load word_to_int
@@ -48,7 +48,7 @@ def get_random_text(index):
     while (random_index == index):
         random_index = random.randint(0, num_of_rows)
 
-    irrelevant_row = df_train.iloc[random_index]
+    irrelevant_row = df.iloc[random_index]
     irrelevant_item = irrelevant_row['passages']
     irrelevant_passages = irrelevant_item['passage_text']
 
@@ -60,7 +60,7 @@ def get_random_text(index):
 query_list = []
 revalent_list = []
 irrelavant_list = []
-for index, row in tqdm(df_train.iterrows(), total=len(df_train), desc="Processing rows"):
+for index, row in tqdm(df.iterrows(), total=len(df), desc="Processing rows"):
     q, r, ir = process_row(row, word_to_int)
     # print(index)
     query_list += q
@@ -74,7 +74,7 @@ output_dict = pd.DataFrame({
 })
 
 print(output_dict.head(20))
-output_dict.to_pickle(Path(__file__).parent.parent / "data/preprocess_bing.pkl")
+output_dict.to_pickle(Path(__file__).parent.parent / "data/test_preprocess_bing.pkl")
 #output_dict.to_csv('data/preprocess_bing.csv')
 # create_frame = df_train.apply(lambda row: process_row(row), axis=1)
 # print(create_frame.head())

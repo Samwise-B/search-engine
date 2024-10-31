@@ -28,8 +28,8 @@ args_d = (vocab_dim, embedding_dim, hidden_dim)
 DModel = TwoTowers.TowerDocument(*args_d)
 
 print("loading model weights")
-DModel.load_state_dict(torch.load(
-    Path(__file__).parent.parent / "weights/DModel_weights.pt", weights_only=True))
+# DModel.load_state_dict(torch.load(
+#     Path(__file__).parent.parent / "weights/DModel_weights.pt", weights_only=True))
 
 print("done")
 

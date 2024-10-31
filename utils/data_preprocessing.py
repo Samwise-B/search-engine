@@ -79,3 +79,25 @@ def load_word_to_int():
     with open("dictionaries/bing_word_to_int.pkl", "rb") as file:
         word_to_int = pickle.load(file)
     return word_to_int
+
+def pad_batch(batch):
+    max_lengths = batch.apply(lambda row: max(len(row['query']), len(row['relevant']), len(row['irrelevant'])), axis=1)
+    batch_max_length = max(max_lengths)
+
+    padded_batch = batch.apply(lambda row: pad_row_right(row, batch_max_length), axis=1)
+    #print(padded_batch.head())
+    return padded_batch['query'].tolist(), padded_batch['relevant'].tolist(), padded_batch['irrelevant'].tolist()
+
+def pad_row_left(row, max_length, pad_value=0):
+    query = ([pad_value] * (max_length - len(row['query']))) + row['query']
+    relevant = ([pad_value] * (max_length - len(row['relevant']))) + row['relevant']
+    irrelevant = ([pad_value] * (max_length - len(row['irrelevant']))) + row['irrelevant']
+    """Pads a list with `pad_value` until it reaches `max_length`."""
+    return pd.Series({'query': query, "relevant": relevant, "irrelevant": irrelevant})
+
+def pad_row_right(row, max_length, pad_value=0):
+    query = row['query'] + ([pad_value] * (max_length - len(row['query'])))
+    relevant = row['relevant'] + ([pad_value] * (max_length - len(row['relevant'])))
+    irrelevant = row['irrelevant'] + ([pad_value] * (max_length - len(row['irrelevant'])))
+    """Pads a list with `pad_value` until it reaches `max_length`."""
+    return pd.Series({'query': query, "relevant": relevant, "irrelevant": irrelevant})

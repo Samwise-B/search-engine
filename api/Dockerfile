@@ -19,4 +19,4 @@ COPY ./dictionaries ./dictionaries
 #COPY ./data ./data
 
 
-CMD ["fastapi", "run", "api/main.py", "--port", "80"]
+CMD ["fastapi", "run", "api/main.py", "--port", "3000"]
