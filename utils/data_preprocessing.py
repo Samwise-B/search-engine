@@ -1,5 +1,11 @@
 import collections
 import pickle
+import pandas as pd
+import gensim.downloader as api
+import datasets
+import torch
+import numpy as np
+import random
 
 def clean_text(text):
     text = text.lower()
@@ -101,3 +107,35 @@ def pad_row_right(row, max_length, pad_value=0):
     irrelevant = row['irrelevant'] + ([pad_value] * (max_length - len(row['irrelevant'])))
     """Pads a list with `pad_value` until it reaches `max_length`."""
     return pd.Series({'query': query, "relevant": relevant, "irrelevant": irrelevant})
+
+def words_to_vec(wrd2vec, words):
+    return torch.tensor(np.array([wrd2vec[word] for word in words]), dtype=torch.float32)
+
+def embed_marco():
+    print("loading gensim")
+    wrd2vec = api.load("word2vec-google-news-300")
+    #txt2vec = lambda txt: torch.tensor(np.array([wrd2vec[x] if x in wrd2vec else [0.0]*300 for x in txt.lower().split()]), dtype=torch.float32, device=device)
+    
+    print("loading dataset")
+    ds = datasets.load_dataset("microsoft/ms_marco", "v1.1")
+    print("done")
+    ds = ds['train']
+    passages = ds['passages']
+    queries = []
+    positives = []
+    negatives = []
+
+    for row in passages:
+        query = row['query'].strip().lower().split(" ")
+        for passage in row['passage_text']:
+            queries.append(words_to_vec(query))
+            passage = passage.strip().lower().split(" ")
+            positives.append(words_to_vec(wrd2vec, passage))
+            ind = random.randint(0, len(ds['query'])-1)
+            rnd_passages = ds['query'][ind]['passage_text']
+            neg = rnd_passages[random.randint(0, len(rnd_passages)-1)]
+            negatives.append(neg)
+
+    return queries, positives, negatives
+
+
